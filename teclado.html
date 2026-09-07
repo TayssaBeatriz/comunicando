@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teclado circular</title>
+    <link rel="stylesheet" href="css/teclado.css">
+</head>
+<body>
+    <main class="login">
+             <div class="campo" aria-label="Frase formada"><span id="valor"></span></div>
+        <p class="pergunta"></p>
+        <div class="teclado-area">
+            <section class="teclado" id="teclado" aria-label="Teclado circular">
+                <div class="anel anel-externo" id="anelExterno"></div>
+                <div class="anel anel-meio" id="anelMeio"></div>
+                <div class="anel anel-interno" id="anelInterno"></div>
+            </section>
+            <div class="satelites" id="menuOrbital" aria-label="Menu de ações">
+                <button class="satelite" id="limpar" type="button" aria-label="Limpar">limpar</button>
+                <button class="satelite" id="excluir" type="button" aria-label="Excluir">excluir</button>
+                <button class="satelite" id="falar" type="button" aria-label="Falar">falar</button>
+                <button class="satelite satelite-destaque" id="concluir" type="button" aria-label="Concluir">concluir</button>
+            </div>
+        </div>
+   
+    </main>
+    <script src="js/teclado.js"></script>
+</body>
+</html>
