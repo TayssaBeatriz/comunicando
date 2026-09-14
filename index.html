@@ -198,12 +198,14 @@ body,.bg-outras{
 .profile-card,
 .history-card {
   box-shadow: 0 4px 14px rgba(28, 88, 115, 0.09);
+  
 }
 
 .topbar-title {
   color: var(--white);
   text-shadow: none;
 }
+
 
 .menu-btn,
 .card {
@@ -219,6 +221,7 @@ body,.bg-outras{
   text-align: left;
   text-decoration: none;
   color: inherit;
+  
  
   font-family: var(--font);
   backdrop-filter: blur(6px);
@@ -1324,6 +1327,174 @@ body.layout-infantil .action-row button {
 body.layout-infantil .stars {
   font-size: 21px;
 }
+
+
+/* ===== Onboarding (login + escolha de perfil) ===== */
+
+.onboard-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: 30px;
+}
+
+.onboard-title {
+  font-family: var(--font-title);
+  font-size: 30px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  margin-bottom: 6px;
+}
+
+.onboard-subtitle {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 22px;
+}
+
+.onboard-panel {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid var(--card-border);
+  border-radius: 22px;
+  padding: 20px 16px;
+  backdrop-filter: blur(4px);
+}
+
+.onboard-panel h2 {
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: 19px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.onboard-panel > p {
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.profile-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.profile-choice-card {
+  border-radius: 16px;
+  padding: 14px 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 0.1s ease,
+    border-color 0.15s ease;
+}
+
+.profile-choice-card:hover {
+  transform: translateY(-2px);
+}
+
+.profile-choice-card:active {
+  transform: scale(0.97);
+}
+
+.profile-choice-card.kids {
+  background: linear-gradient(180deg, #ffe08a, var(--yellow));
+}
+
+.profile-choice-card.adult {
+  background: #dfeeff;
+}
+
+.profile-choice-card.selected {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.profile-choice-card .emoji {
+  font-size: 22px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.profile-choice-card .tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--navy);
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
+.profile-choice-card .title {
+  font-family: var(--font-title);
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 6px;
+  line-height: 1.15;
+}
+
+.profile-choice-card .desc {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--navy);
+  opacity: 0.85;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.profile-choice-card .foot {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--navy);
+  opacity: 0.7;
+}
+
+.onboard-continue-bar {
+  width: 100%;
+  text-align: center;
+  padding: 13px;
+  border: none;
+  border-radius: 14px;
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 12.5px;
+  margin-top: 4px;
+  background: rgba(155, 140, 40, 0.5);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: not-allowed;
+}
+
+.onboard-continue-bar.enabled {
+  background: var(--navy);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.onboard-continue-bar:disabled {
+  opacity: 1;
+}
+
+.onboard-hint {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 12px;
+}
 </style>
 </head>
 
@@ -1930,6 +2101,10 @@ let STATE = {
 
   layoutPromptVisible: false,
 
+  onboardSelectedType: null,
+
+  editingProfileName: false,
+
   data: {
 
     favWords: [],
@@ -1944,7 +2119,8 @@ let STATE = {
       name: '',
       stars: 0,
       age: null,
-      layout: 'neutro'
+      layout: 'neutro',
+      onboarded: false
     }
 
   }
@@ -2012,6 +2188,12 @@ function loadData() {
       'Erro ao carregar os dados:',
       error
     );
+
+  }
+
+  if (!STATE.data.profile.onboarded) {
+
+    STATE.screen = 'login';
 
   }
 
@@ -2129,6 +2311,8 @@ function go(screen, extra = {}) {
   if (screen !== 'profile') {
 
     STATE.layoutPromptVisible = false;
+
+    STATE.editingProfileName = false;
 
   }
 
@@ -2421,6 +2605,14 @@ function render() {
 
   switch (STATE.screen) {
 
+    case 'login':
+      html = renderLogin();
+      break;
+
+    case 'chooseProfile':
+      html = renderChooseProfile();
+      break;
+
     case 'home':
       html = renderHome();
       break;
@@ -2570,6 +2762,152 @@ function renderLineIcons() {
       );
     }
   });
+}
+
+
+
+function renderLogin() {
+
+  const profile =
+    STATE.data.profile;
+
+  return `
+
+    <div class="onboard-wrap">
+
+      <div class="onboard-title">
+        Comunica
+      </div>
+
+      <div class="onboard-subtitle">
+        Comunicação simples, clara e no seu ritmo.
+      </div>
+
+      <div class="onboard-panel">
+
+        <h2>
+          Bem-vindo(a)!
+        </h2>
+
+        <p>
+          Antes de começar, como você se chama?
+        </p>
+
+        <div class="form-row">
+
+          <input
+            type="text"
+            id="loginName"
+            placeholder="Digite seu nome"
+            value="${profile.name || ''}"
+          >
+
+        </div>
+
+        <button
+          class="submit-btn"
+          id="loginContinueBtn"
+        >
+          Continuar
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+
+function renderChooseProfile() {
+
+  return `
+
+    <div class="onboard-wrap">
+
+      <div class="onboard-title">
+        Comunica
+      </div>
+
+      <div class="onboard-subtitle">
+        Comunicação simples, clara e no seu ritmo.
+      </div>
+
+      <div class="onboard-panel">
+
+        <h2>
+          Quem vai usar o Comunica?
+        </h2>
+
+        <p>
+          Escolha o tipo de perfil para continuar com o
+          cadastro certo para cada jornada.
+        </p>
+
+        <div class="profile-choice-grid">
+
+          <div
+            class="profile-choice-card kids"
+            data-profile-type="infantil"
+          >
+
+            <div class="tag">
+              Para a criança
+            </div>
+
+            <div class="title">
+              Perfil Júnior
+            </div>
+
+            <div class="desc">
+              Uma experiência visual, simples e segura
+              para aprender a se comunicar.
+            </div>
+
+            <div class="foot">
+              Cadastro feito por um adulto responsável →
+            </div>
+
+          </div>
+
+          <div
+            class="profile-choice-card adult"
+            data-profile-type="adulto"
+          >
+
+            <div class="tag">
+              Para você
+            </div>
+
+            <div class="title">
+              Perfil Sênior
+            </div>
+
+            <div class="desc">
+              Acompanhe o desenvolvimento, organize
+              recursos e personalize a jornada.
+            </div>
+
+            <div class="foot">
+              Ideal para familiares, educadores e terapeutas →
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="onboard-hint">
+          Você poderá ajustar essa escolha depois.
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
 }
 
 
@@ -3770,6 +4108,15 @@ function renderProfile() {
   const profile =
     STATE.data.profile;
 
+  const hasName =
+    !!(profile.name && profile.name.trim() !== '');
+
+  const isEditingName =
+    STATE.editingProfileName;
+
+  const showRegisterBtn =
+    !hasName || isEditingName;
+
   return `
 
     <div class="topbar">
@@ -3804,70 +4151,32 @@ function renderProfile() {
             id="profileName"
             placeholder="Como você se chama?"
             value="${profile.name || ''}"
+            ${hasName && !isEditingName ? 'disabled' : ''}
           >
 
         </div>
 
-        <div class="form-row">
-
-          <input
-            type="number"
-            id="profileAge"
-            placeholder="Idade"
-            min="0"
-            value="${profile.age === null || profile.age === undefined ? '' : profile.age}"
-          >
-
-        </div>
-
-        <button
-          class="submit-btn"
-          id="registerProfileBtn"
-        >
-          Cadastrar perfil
-        </button>
+        ${
+          showRegisterBtn
+            ? `
+              <button
+                class="submit-btn"
+                id="registerProfileBtn"
+              >
+                Cadastrar perfil
+              </button>
+            `
+            : `
+              <button
+                class="submit-btn"
+                id="editProfileBtn"
+              >
+                Editar
+              </button>
+            `
+        }
 
       </div>
-
-      ${
-        STATE.layoutPromptVisible
-          ? `
-            <div class="challenge-card" style="text-align:left;">
-
-              <h3 style="margin:0 0 10px;font-family:var(--font-title);font-size:15px;font-weight:800;color:var(--white);">
-                Mudar para o layout infantil?
-              </h3>
-
-              <p style="margin:0 0 14px;">
-                Idade de ${profile.age} anos identificada.
-                Deseja usar o layout infantil, com botões
-                maiores e mais coloridos?
-              </p>
-
-              <div style="display:flex;gap:10px;">
-
-                <button
-                  class="submit-btn"
-                  id="acceptInfantilBtn"
-                  style="flex:1;"
-                >
-                  Sim, usar infantil
-                </button>
-
-                <button
-                  class="submit-btn"
-                  id="declineInfantilBtn"
-                  style="flex:1;background:transparent;color:var(--white);border:2px solid var(--card-border);"
-                >
-                  Não, manter neutro
-                </button>
-
-              </div>
-
-            </div>
-          `
-          : ''
-      }
 
       <div class="info-block">
 
@@ -3921,6 +4230,46 @@ function renderProfile() {
           </span>
 
         </div>
+
+      </div>
+
+      <div class="form-block">
+
+        <h3>
+          Aparência
+        </h3>
+
+        <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:var(--white);opacity:.85;">
+          Troque para o perfil Júnior a qualquer momento.
+        </p>
+
+        <button
+          class="submit-btn"
+          id="switchJuniorBtn"
+        >
+          Trocar para perfil Júnior
+        </button>
+
+      </div>
+
+      <div class="form-block">
+
+        <h3>
+          Conta
+        </h3>
+
+        <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:var(--white);opacity:.85;">
+          Ao sair, você precisará entrar novamente com
+          seu nome na próxima vez que abrir o app.
+        </p>
+
+        <button
+          class="submit-btn"
+          id="logoutBtn"
+          style="background:#c0392b;"
+        >
+          Sair desta conta
+        </button>
 
       </div>
 
@@ -3998,6 +4347,103 @@ function attachHandlers() {
 
 
   prepareKeyboardNavigation();
+
+
+  const loginContinueBtn =
+    document.getElementById(
+      'loginContinueBtn'
+    );
+
+  if (loginContinueBtn) {
+
+    loginContinueBtn.addEventListener(
+      'click',
+      () => {
+
+        const input =
+          document.getElementById(
+            'loginName'
+          );
+
+        const name =
+          input
+            ? input.value.trim()
+            : '';
+
+        if (name === '') {
+
+          showToast(
+            'Digite seu nome para continuar'
+          );
+
+          return;
+
+        }
+
+        STATE.data.profile.name = name;
+
+        saveData();
+
+        speak(
+          'Olá, ' + name
+        );
+
+        go('chooseProfile');
+
+      }
+    );
+
+  }
+
+
+  const adultProfileCard =
+    document.querySelector(
+      '[data-profile-type="adulto"]'
+    );
+
+  if (adultProfileCard) {
+
+    adultProfileCard.addEventListener(
+      'click',
+      () => {
+
+        STATE.data.profile.layout = 'neutro';
+
+        STATE.data.profile.onboarded = true;
+
+        saveData();
+
+        go('home');
+
+      }
+    );
+
+  }
+
+
+  const kidsProfileCard =
+    document.querySelector(
+      '[data-profile-type="infantil"]'
+    );
+
+  if (kidsProfileCard) {
+
+    kidsProfileCard.addEventListener(
+      'click',
+      () => {
+
+        STATE.data.profile.layout = 'infantil';
+
+        STATE.data.profile.onboarded = true;
+
+        saveData();
+
+         window.location.href = 'infantil.html';
+
+      }
+    );
+
+  }
 
 
 
@@ -4734,11 +5180,6 @@ function attachHandlers() {
             'profileName'
           );
 
-        const ageInput =
-          document.getElementById(
-            'profileAge'
-          );
-
         if (nameInput) {
 
           STATE.data.profile.name =
@@ -4746,51 +5187,7 @@ function attachHandlers() {
 
         }
 
-        const rawAge =
-          ageInput
-            ? ageInput.value.trim()
-            : '';
-
-        if (rawAge === '') {
-
-          STATE.data.profile.age = null;
-
-          saveData();
-
-          showToast(
-            'Perfil cadastrado!'
-          );
-
-          speak(
-            'Perfil cadastrado'
-          );
-
-          render();
-
-          return;
-
-        }
-
-        const age =
-          parseInt(rawAge, 10);
-
-        if (
-          isNaN(age) ||
-          age < 0
-        ) {
-
-          showToast(
-            'Idade inválida'
-          );
-
-          return;
-
-        }
-
-        STATE.data.profile.age = age;
-
-        STATE.layoutPromptVisible =
-          age >= 0 && age <= 13;
+        STATE.editingProfileName = false;
 
         saveData();
 
@@ -4810,27 +5207,31 @@ function attachHandlers() {
   }
 
 
-  const acceptInfantilBtn =
+  const editProfileBtn =
     document.getElementById(
-      'acceptInfantilBtn'
+      'editProfileBtn'
     );
 
-  if (acceptInfantilBtn) {
+  if (editProfileBtn) {
 
-    acceptInfantilBtn.addEventListener(
+    editProfileBtn.addEventListener(
       'click',
       () => {
 
-        STATE.layoutPromptVisible = false;
+        STATE.editingProfileName = true;
 
-        setLayout('infantil');
+        render();
 
-        showToast(
-          'Layout infantil ativado'
-        );
+        const nameInput =
+          document.getElementById(
+            'profileName'
+          );
 
-      
-          window.location.href = "infantil.html";
+        if (nameInput) {
+
+          nameInput.focus();
+
+        }
 
       }
     );
@@ -4838,24 +5239,55 @@ function attachHandlers() {
   }
 
 
-  const declineInfantilBtn =
+  const switchJuniorBtn =
     document.getElementById(
-      'declineInfantilBtn'
+      'switchJuniorBtn'
     );
 
-  if (declineInfantilBtn) {
+  if (switchJuniorBtn) {
 
-    declineInfantilBtn.addEventListener(
+    switchJuniorBtn.addEventListener(
       'click',
       () => {
 
-        STATE.layoutPromptVisible = false;
+        STATE.data.profile.layout = 'infantil';
 
-        render();
+        saveData();
 
         showToast(
-          'Layout neutro mantido'
+          'Perfil Júnior ativado'
         );
+
+         window.location.href = 'infantil.html';
+
+      }
+    );
+
+  }
+
+
+  const logoutBtn =
+    document.getElementById(
+      'logoutBtn'
+    );
+
+  if (logoutBtn) {
+
+    logoutBtn.addEventListener(
+      'click',
+      () => {
+
+        STATE.data.profile.onboarded = false;
+
+        STATE.data.profile.name = '';
+
+        saveData();
+
+        showToast(
+          'Você saiu da conta'
+        );
+
+        go('login');
 
       }
     );
@@ -4940,6 +5372,7 @@ function prepareKeyboardNavigation() {
     '[data-fav-word]',
     '[data-del-word]',
     '[data-del-cat]',
+    '[data-profile-type]',
     '.emoji-pick'
   ].join(',');
 
@@ -4968,6 +5401,7 @@ function keyboardTargets() {
     '[data-fav-word]',
     '[data-del-word]',
     '[data-del-cat]',
+    '[data-profile-type]',
     '.emoji-pick',
     'input:not([disabled])',
     'select:not([disabled])',
@@ -5000,11 +5434,6 @@ function moveKeyboardFocus(direction) {
     return;
   }
 
-  // Navegação sequencial: segue a ordem em que os
-  // elementos aparecem na tela (a mesma ordem do Tab).
-  // Direita/Baixo avança, Esquerda/Cima volta. Isso é
-  // mais previsível do que tentar calcular geometricamente
-  // qual botão está "mais próximo" na tela.
   const goingForward =
     direction === 'ArrowRight' ||
     direction === 'ArrowDown';
@@ -5032,13 +5461,6 @@ document.addEventListener('keydown', event => {
 
   if (tag === 'INPUT' || tag === 'TEXTAREA') {
 
-    // Dentro de um campo de texto, ↑/↓ não têm uso
-    // nativo em um input de uma linha, então sempre
-    // navegam para o próximo/anterior elemento.
-    // ←/→ continuam movendo o cursor dentro do texto
-    // normalmente, e só navegam para outro elemento
-    // quando o cursor já está no início (←) ou no
-    // fim (→) do texto digitado.
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
       moveKeyboardFocus(event.key);
@@ -5074,9 +5496,6 @@ document.addEventListener('keydown', event => {
 
   if (tag === 'SELECT') {
 
-    // No menu suspenso, ↑/↓ mantêm o comportamento
-    // nativo (trocar a opção selecionada). ←/→ movem
-    // para o próximo/anterior elemento da tela.
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
       moveKeyboardFocus(event.key);
@@ -5167,11 +5586,7 @@ document.addEventListener(
       const focused =
         document.activeElement;
 
-      // Se o foco estiver em um botão
-      // (Apagar, Limpar, Falar, Favoritar,
-      // setas do carrossel, Selecionar, etc.),
-      // deixa o próprio botão tratar sua ação
-      // e não seleciona a palavra do carrossel.
+   
       if (
         focused &&
         focused.tagName === 'BUTTON'
